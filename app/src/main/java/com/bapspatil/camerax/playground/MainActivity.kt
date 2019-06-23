@@ -21,6 +21,8 @@ import android.content.pm.PackageManager
 import android.graphics.Matrix
 import android.os.Bundle
 import android.os.Environment
+import android.os.Handler
+import android.os.HandlerThread
 import android.util.Log
 import android.util.Rational
 import android.util.Size
@@ -99,7 +101,18 @@ class MainActivity : AppCompatActivity(), LifecycleOwner {
                 })
         }
 
-        CameraX.bindToLifecycle(this, preview, imageCapture)
+        val analyzerConfig = ImageAnalysisConfig.Builder().apply {
+            val analyzerThread = HandlerThread(
+                "LuminosityAnalysis").apply { start() }
+            setCallbackHandler(Handler(analyzerThread.looper))
+            setImageReaderMode(ImageAnalysis.ImageReaderMode.ACQUIRE_LATEST_IMAGE)
+        }.build()
+
+        val analyzerUseCase = ImageAnalysis(analyzerConfig).apply {
+            analyzer = LuminosityAnalyzer()
+        }
+
+        CameraX.bindToLifecycle(this, preview, imageCapture, analyzerUseCase)
     }
 
     private fun updateTransform() {
