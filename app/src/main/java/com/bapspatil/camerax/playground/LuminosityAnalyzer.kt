@@ -26,10 +26,10 @@ class LuminosityAnalyzer : ImageAnalysis.Analyzer {
     private var lastAnalyzedTimestamp = 0L
 
     private fun ByteBuffer.toByteArray(): ByteArray {
-        rewind()    // Rewind the buffer to zero
+        rewind()
         val data = ByteArray(remaining())
-        get(data)   // Copy the buffer into a byte array
-        return data // Return the byte array
+        get(data)
+        return data
     }
 
     override fun analyze(image: ImageProxy, rotationDegrees: Int) {
@@ -41,7 +41,6 @@ class LuminosityAnalyzer : ImageAnalysis.Analyzer {
             val pixels = data.map { it.toInt() and 0xFF }
             val luma = pixels.average()
             Log.d("CameraXPlayground", "Average luminosity: $luma")
-            // Update timestamp of last analyzed frame
             lastAnalyzedTimestamp = currentTimestamp
         }
     }

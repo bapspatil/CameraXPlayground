@@ -47,7 +47,8 @@ class MainActivity : AppCompatActivity(), LifecycleOwner {
             viewFinder.post { startCamera() }
         } else {
             ActivityCompat.requestPermissions(
-                this, PERMISSIONS, CAMERA_REQUEST_PERMISSION_CODE)
+                this, PERMISSIONS, CAMERA_REQUEST_PERMISSION_CODE
+            )
         }
 
         viewFinder.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
@@ -81,12 +82,16 @@ class MainActivity : AppCompatActivity(), LifecycleOwner {
 
         val imageCapture = ImageCapture(imageCaptureConfig)
         captureFab.setOnClickListener {
-            val file = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
-                "${System.currentTimeMillis()}_CameraXPlayground.jpg")
+            val file = File(
+                Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
+                "${System.currentTimeMillis()}_CameraXPlayground.jpg"
+            )
             imageCapture.takePicture(file,
                 object : ImageCapture.OnImageSavedListener {
-                    override fun onError(error: ImageCapture.UseCaseError,
-                                         message: String, exc: Throwable?) {
+                    override fun onError(
+                        error: ImageCapture.UseCaseError,
+                        message: String, exc: Throwable?
+                    ) {
                         val msg = "Photo capture failed: $message"
                         Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
                         Log.e("CameraXApp", msg)
@@ -103,7 +108,8 @@ class MainActivity : AppCompatActivity(), LifecycleOwner {
 
         val analyzerConfig = ImageAnalysisConfig.Builder().apply {
             val analyzerThread = HandlerThread(
-                "LuminosityAnalysis").apply { start() }
+                "LuminosityAnalysis"
+            ).apply { start() }
             setCallbackHandler(Handler(analyzerThread.looper))
             setImageReaderMode(ImageAnalysis.ImageReaderMode.ACQUIRE_LATEST_IMAGE)
         }.build()
@@ -121,7 +127,7 @@ class MainActivity : AppCompatActivity(), LifecycleOwner {
         val centerX = viewFinder.width / 2f
         val centerY = viewFinder.height / 2f
 
-        val rotationDegrees = when(viewFinder.display.rotation) {
+        val rotationDegrees = when (viewFinder.display.rotation) {
             Surface.ROTATION_0 -> 0
             Surface.ROTATION_90 -> 90
             Surface.ROTATION_180 -> 180
