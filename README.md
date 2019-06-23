@@ -1,4 +1,4 @@
-# CameraXPlayground
+# CameraX Playground
 
 A playground repository for playing around with CameraX API in Android Jetpack.
 
