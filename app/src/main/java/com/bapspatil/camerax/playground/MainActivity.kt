@@ -57,6 +57,17 @@ class MainActivity : AppCompatActivity(), LifecycleOwner {
     }
 
     private fun startCamera() {
+        // Setup the image preview
+        val preview = setupPreview()
+        // Setup the image capture
+        val imageCapture = setupImageCapture()
+        // Setup the image analysis
+        val analyzerUseCase = setupImageAnalysis()
+        // Bind camera to the lifecycle of the Activity
+        CameraX.bindToLifecycle(this, preview, imageCapture, analyzerUseCase)
+    }
+
+    private fun setupPreview(): Preview {
         val previewConfig = PreviewConfig.Builder().apply {
             setTargetAspectRatio(Rational(1, 1))
             setTargetResolution(Size(800, 800))
@@ -73,7 +84,10 @@ class MainActivity : AppCompatActivity(), LifecycleOwner {
             viewFinder.surfaceTexture = it.surfaceTexture
             updateTransform()
         }
+        return preview
+    }
 
+    private fun setupImageCapture(): ImageCapture {
         val imageCaptureConfig = ImageCaptureConfig.Builder()
             .apply {
                 setTargetAspectRatio(Rational(1, 1))
@@ -105,7 +119,10 @@ class MainActivity : AppCompatActivity(), LifecycleOwner {
                     }
                 })
         }
+        return imageCapture
+    }
 
+    private fun setupImageAnalysis(): ImageAnalysis {
         val analyzerConfig = ImageAnalysisConfig.Builder().apply {
             val analyzerThread = HandlerThread(
                 "LuminosityAnalysis"
@@ -117,8 +134,7 @@ class MainActivity : AppCompatActivity(), LifecycleOwner {
         val analyzerUseCase = ImageAnalysis(analyzerConfig).apply {
             analyzer = LuminosityAnalyzer()
         }
-
-        CameraX.bindToLifecycle(this, preview, imageCapture, analyzerUseCase)
+        return analyzerUseCase
     }
 
     private fun updateTransform() {
