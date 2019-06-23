@@ -20,19 +20,20 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.graphics.Matrix
 import android.os.Bundle
+import android.os.Environment
+import android.util.Log
 import android.util.Rational
 import android.util.Size
 import android.view.Surface
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.camera.core.CameraX
-import androidx.camera.core.Preview
-import androidx.camera.core.PreviewConfig
+import androidx.camera.core.*
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import kotlinx.android.synthetic.main.activity_main.*
+import java.io.File
 
 class MainActivity : AppCompatActivity(), LifecycleOwner {
 
@@ -55,7 +56,7 @@ class MainActivity : AppCompatActivity(), LifecycleOwner {
     private fun startCamera() {
         val previewConfig = PreviewConfig.Builder().apply {
             setTargetAspectRatio(Rational(1, 1))
-            setTargetResolution(Size(640, 640))
+            setTargetResolution(Size(800, 800))
         }.build()
 
         val preview = Preview(previewConfig)
@@ -70,7 +71,35 @@ class MainActivity : AppCompatActivity(), LifecycleOwner {
             updateTransform()
         }
 
-        CameraX.bindToLifecycle(this, preview)
+        val imageCaptureConfig = ImageCaptureConfig.Builder()
+            .apply {
+                setTargetAspectRatio(Rational(1, 1))
+                setCaptureMode(ImageCapture.CaptureMode.MAX_QUALITY)
+            }.build()
+
+        val imageCapture = ImageCapture(imageCaptureConfig)
+        captureFab.setOnClickListener {
+            val file = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
+                "${System.currentTimeMillis()}_CameraXPlayground.jpg")
+            imageCapture.takePicture(file,
+                object : ImageCapture.OnImageSavedListener {
+                    override fun onError(error: ImageCapture.UseCaseError,
+                                         message: String, exc: Throwable?) {
+                        val msg = "Photo capture failed: $message"
+                        Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
+                        Log.e("CameraXApp", msg)
+                        exc?.printStackTrace()
+                    }
+
+                    override fun onImageSaved(file: File) {
+                        val msg = "Photo capture succeeded: ${file.absolutePath}"
+                        Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
+                        Log.d("CameraXApp", msg)
+                    }
+                })
+        }
+
+        CameraX.bindToLifecycle(this, preview, imageCapture)
     }
 
     private fun updateTransform() {
@@ -108,6 +137,6 @@ class MainActivity : AppCompatActivity(), LifecycleOwner {
 
     companion object {
         private const val CAMERA_REQUEST_PERMISSION_CODE = 13
-        private val PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
+        private val PERMISSIONS = arrayOf(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE)
     }
 }
