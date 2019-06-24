@@ -1,6 +1,6 @@
 # CameraX Playground
 
-A playground repository for playing around with CameraX API in Android Jetpack.
+A playground repository for playing around with [CameraX API](https://developer.android.com/training/camerax) in Android Jetpack.
 
 ## Screenshots
 
