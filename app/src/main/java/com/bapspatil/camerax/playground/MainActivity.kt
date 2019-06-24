@@ -132,10 +132,9 @@ class MainActivity : AppCompatActivity(), LifecycleOwner {
             setImageReaderMode(ImageAnalysis.ImageReaderMode.ACQUIRE_LATEST_IMAGE)
         }.build()
 
-        val analyzerUseCase = ImageAnalysis(analyzerConfig).apply {
+        return ImageAnalysis(analyzerConfig).apply {
             analyzer = RedColorAnalyzer()
         }
-        return analyzerUseCase
     }
 
     private fun updateTransform() {
