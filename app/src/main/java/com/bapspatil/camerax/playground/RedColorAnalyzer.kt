@@ -39,8 +39,8 @@ class RedColorAnalyzer : ImageAnalysis.Analyzer {
             val buffer = image.planes[0].buffer
             val data = buffer.toByteArray()
             val pixels = data.map { it.toInt() and 0xFF0000 }
-            val luma = pixels.average()
-            Log.d("CameraXPlayground", "Average luminosity: $luma")
+            val averageRedPixels = pixels.average()
+            Log.d("CameraXPlayground", "Average red pixels: $averageRedPixels")
             lastAnalyzedTimestamp = currentTimestamp
         }
     }
