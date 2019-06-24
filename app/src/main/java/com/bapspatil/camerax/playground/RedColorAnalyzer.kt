@@ -22,7 +22,7 @@ import androidx.camera.core.ImageProxy
 import java.nio.ByteBuffer
 import java.util.concurrent.TimeUnit
 
-class LuminosityAnalyzer : ImageAnalysis.Analyzer {
+class RedColorAnalyzer : ImageAnalysis.Analyzer {
     private var lastAnalyzedTimestamp = 0L
 
     private fun ByteBuffer.toByteArray(): ByteArray {
@@ -38,7 +38,7 @@ class LuminosityAnalyzer : ImageAnalysis.Analyzer {
             TimeUnit.SECONDS.toMillis(1)) {
             val buffer = image.planes[0].buffer
             val data = buffer.toByteArray()
-            val pixels = data.map { it.toInt() and 0xFF }
+            val pixels = data.map { it.toInt() and 0xFF0000 }
             val luma = pixels.average()
             Log.d("CameraXPlayground", "Average luminosity: $luma")
             lastAnalyzedTimestamp = currentTimestamp

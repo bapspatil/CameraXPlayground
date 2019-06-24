@@ -133,7 +133,7 @@ class MainActivity : AppCompatActivity(), LifecycleOwner {
         }.build()
 
         val analyzerUseCase = ImageAnalysis(analyzerConfig).apply {
-            analyzer = LuminosityAnalyzer()
+            analyzer = RedColorAnalyzer()
         }
         return analyzerUseCase
     }
