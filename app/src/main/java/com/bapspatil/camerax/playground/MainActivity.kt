@@ -126,7 +126,7 @@ class MainActivity : AppCompatActivity(), LifecycleOwner {
     private fun setupImageAnalysis(): ImageAnalysis {
         val analyzerConfig = ImageAnalysisConfig.Builder().apply {
             val analyzerThread = HandlerThread(
-                "LuminosityAnalysis"
+                "RedColorAnalysis"
             ).apply { start() }
             setCallbackHandler(Handler(analyzerThread.looper))
             setImageReaderMode(ImageAnalysis.ImageReaderMode.ACQUIRE_LATEST_IMAGE)
