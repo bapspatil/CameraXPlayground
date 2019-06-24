@@ -4,7 +4,7 @@ A playground repository for playing around with CameraX API in Android Jetpack.
 
 ## Screenshots
 
-<img src="./art/screen0.png">&ensp;<img src="./art/screen1.png">
+<img src="./art/screen0.png" width="35%">&ensp;<img src="./art/screen1.png" width="35%">
 
 ## Libraries Used
 
