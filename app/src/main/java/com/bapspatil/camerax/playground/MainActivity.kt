@@ -44,14 +44,14 @@ class MainActivity : AppCompatActivity(), LifecycleOwner {
         setContentView(R.layout.activity_main)
 
         if (areAllPermissionsGranted()) {
-            viewFinder.post { startCamera() }
+            texture_view.post { startCamera() }
         } else {
             ActivityCompat.requestPermissions(
                 this, PERMISSIONS, CAMERA_REQUEST_PERMISSION_CODE
             )
         }
 
-        viewFinder.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
+        texture_view.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
             updateTransform()
         }
     }
@@ -69,6 +69,7 @@ class MainActivity : AppCompatActivity(), LifecycleOwner {
 
     private fun setupPreview(): Preview {
         val previewConfig = PreviewConfig.Builder().apply {
+            setLensFacing(CameraX.LensFacing.BACK)
             setTargetAspectRatio(Rational(1, 1))
             setTargetResolution(Size(800, 800))
         }.build()
@@ -77,11 +78,11 @@ class MainActivity : AppCompatActivity(), LifecycleOwner {
 
         preview.setOnPreviewOutputUpdateListener {
 
-            val parent = viewFinder.parent as ViewGroup
-            parent.removeView(viewFinder)
-            parent.addView(viewFinder, 0)
+            val parent = texture_view.parent as ViewGroup
+            parent.removeView(texture_view)
+            parent.addView(texture_view, 0)
 
-            viewFinder.surfaceTexture = it.surfaceTexture
+            texture_view.surfaceTexture = it.surfaceTexture
             updateTransform()
         }
         return preview
@@ -95,7 +96,7 @@ class MainActivity : AppCompatActivity(), LifecycleOwner {
             }.build()
 
         val imageCapture = ImageCapture(imageCaptureConfig)
-        captureFab.setOnClickListener {
+        btn_capture.setOnClickListener {
             val file = File(
                 Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
                 "${System.currentTimeMillis()}_CameraXPlayground.jpg"
@@ -140,10 +141,10 @@ class MainActivity : AppCompatActivity(), LifecycleOwner {
     private fun updateTransform() {
         val matrix = Matrix()
 
-        val centerX = viewFinder.width / 2f
-        val centerY = viewFinder.height / 2f
+        val centerX = texture_view.width / 2f
+        val centerY = texture_view.height / 2f
 
-        val rotationDegrees = when (viewFinder.display.rotation) {
+        val rotationDegrees = when (texture_view.display.rotation) {
             Surface.ROTATION_0 -> 0
             Surface.ROTATION_90 -> 90
             Surface.ROTATION_180 -> 180
@@ -152,13 +153,13 @@ class MainActivity : AppCompatActivity(), LifecycleOwner {
         }
         matrix.postRotate(-rotationDegrees.toFloat(), centerX, centerY)
 
-        viewFinder.setTransform(matrix)
+        texture_view.setTransform(matrix)
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         if (requestCode == CAMERA_REQUEST_PERMISSION_CODE) {
             if (areAllPermissionsGranted()) {
-                viewFinder.post { startCamera() }
+                texture_view.post { startCamera() }
             } else {
                 Toast.makeText(this, "Permissions not granted!", Toast.LENGTH_SHORT).show()
                 finish()
