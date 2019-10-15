@@ -28,6 +28,7 @@ import android.util.Rational
 import android.util.Size
 import android.view.Surface
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
@@ -68,6 +69,8 @@ class MainActivity : AppCompatActivity(), LifecycleOwner {
     }
 
     private fun setupPreview(): Preview {
+        resizePreviewForDeviceScreen()
+
         val previewConfig = PreviewConfig.Builder().apply {
             setLensFacing(CameraX.LensFacing.BACK)
             setTargetAspectRatio(Rational(1, 1))
@@ -86,6 +89,22 @@ class MainActivity : AppCompatActivity(), LifecycleOwner {
             updateTransform()
         }
         return preview
+    }
+
+    private fun resizePreviewForDeviceScreen() {
+        val width = IntArray(1)
+        val height = IntArray(1)
+        val viewTreeObserver = texture_view?.viewTreeObserver
+        if (viewTreeObserver != null && viewTreeObserver.isAlive) {
+            viewTreeObserver.addOnGlobalLayoutListener(object :
+                ViewTreeObserver.OnGlobalLayoutListener {
+                override fun onGlobalLayout() {
+                    texture_view?.viewTreeObserver?.removeOnGlobalLayoutListener(this)
+                    width[0] = texture_view.width
+                    height[0] = texture_view.height
+                }
+            })
+        }
     }
 
     private fun setupImageCapture(): ImageCapture {
@@ -155,7 +174,11 @@ class MainActivity : AppCompatActivity(), LifecycleOwner {
         texture_view.setTransform(matrix)
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
         if (requestCode == CAMERA_REQUEST_PERMISSION_CODE) {
             if (areAllPermissionsGranted()) {
                 texture_view.post { startCamera() }
@@ -172,6 +195,7 @@ class MainActivity : AppCompatActivity(), LifecycleOwner {
 
     companion object {
         private const val CAMERA_REQUEST_PERMISSION_CODE = 13
-        private val PERMISSIONS = arrayOf(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        private val PERMISSIONS =
+            arrayOf(Manifest.permission.CAMERA, Manifest.permission.WRITE_EXTERNAL_STORAGE)
     }
 }

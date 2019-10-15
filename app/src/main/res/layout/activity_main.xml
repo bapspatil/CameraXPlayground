@@ -24,8 +24,8 @@
 
     <TextureView
             android:id="@+id/texture_view"
-            android:layout_width="800px"
-            android:layout_height="800px"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
             android:layout_centerInParent="true"/>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
