@@ -21,13 +21,11 @@ import android.content.pm.PackageManager
 import android.graphics.Matrix
 import android.os.Bundle
 import android.os.Environment
-import android.os.Handler
-import android.os.HandlerThread
+import android.util.DisplayMetrics
 import android.util.Log
 import android.util.Rational
 import android.view.Surface
 import android.view.ViewGroup
-import android.view.ViewTreeObserver
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
@@ -36,8 +34,11 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import kotlinx.android.synthetic.main.activity_main.*
 import java.io.File
+import java.util.concurrent.Executors
 
 class MainActivity : AppCompatActivity(), LifecycleOwner {
+
+    private val executor = Executors.newSingleThreadExecutor()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -68,23 +69,12 @@ class MainActivity : AppCompatActivity(), LifecycleOwner {
     }
 
     private fun setupPreview(): Preview {
-        val width = IntArray(1)
-        val height = IntArray(1)
-        val viewTreeObserver = texture_view?.viewTreeObserver
-        if (viewTreeObserver != null && viewTreeObserver.isAlive) {
-            viewTreeObserver.addOnGlobalLayoutListener(object :
-                ViewTreeObserver.OnGlobalLayoutListener {
-                override fun onGlobalLayout() {
-                    texture_view?.viewTreeObserver?.removeOnGlobalLayoutListener(this)
-                    width[0] = texture_view.width
-                    height[0] = texture_view.height
-                }
-            })
-        }
+        val metrics = DisplayMetrics().also { texture_view.display.getRealMetrics(it) }
+        val screenAspectRatio = Rational(metrics.widthPixels, metrics.heightPixels)
 
         val previewConfig = PreviewConfig.Builder().apply {
             setLensFacing(CameraX.LensFacing.BACK)
-            setTargetAspectRatio(Rational(width[0], height[0]))
+            setTargetAspectRatioCustom(screenAspectRatio)
         }.build()
 
         val preview = Preview(previewConfig)
@@ -93,7 +83,6 @@ class MainActivity : AppCompatActivity(), LifecycleOwner {
             val parent = texture_view.parent as ViewGroup
             parent.removeView(texture_view)
             parent.addView(texture_view, 0)
-
             texture_view.surfaceTexture = it.surfaceTexture
             updateTransform()
         }
@@ -101,10 +90,14 @@ class MainActivity : AppCompatActivity(), LifecycleOwner {
     }
 
     private fun setupImageCapture(): ImageCapture {
+        val metrics = DisplayMetrics().also { texture_view.display.getRealMetrics(it) }
+        val screenAspectRatio = Rational(metrics.widthPixels, metrics.heightPixels)
+
         val imageCaptureConfig = ImageCaptureConfig.Builder()
             .apply {
-                setTargetAspectRatio(Rational(1, 1))
+                setLensFacing(CameraX.LensFacing.BACK)
                 setCaptureMode(ImageCapture.CaptureMode.MAX_QUALITY)
+                setTargetAspectRatioCustom(screenAspectRatio)
             }.build()
 
         val imageCapture = ImageCapture(imageCaptureConfig)
@@ -114,20 +107,25 @@ class MainActivity : AppCompatActivity(), LifecycleOwner {
                 "${System.currentTimeMillis()}_CameraXPlayground.jpg"
             )
             imageCapture.takePicture(file,
+                executor,
                 object : ImageCapture.OnImageSavedListener {
                     override fun onError(
-                        error: ImageCapture.UseCaseError,
-                        message: String, exc: Throwable?
+                        imageCaptureError: ImageCapture.ImageCaptureError,
+                        message: String,
+                        cause: Throwable?
                     ) {
                         val msg = "Photo capture failed: $message"
-                        Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
+                        runOnUiThread {
+                            Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
+                        }
                         Log.e("CameraXApp", msg)
-                        exc?.printStackTrace()
                     }
 
                     override fun onImageSaved(file: File) {
                         val msg = "Photo capture succeeded: ${file.absolutePath}"
-                        Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
+                        runOnUiThread {
+                            Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
+                        }
                         Log.d("CameraXApp", msg)
                     }
                 })
@@ -137,15 +135,11 @@ class MainActivity : AppCompatActivity(), LifecycleOwner {
 
     private fun setupImageAnalysis(): ImageAnalysis {
         val analyzerConfig = ImageAnalysisConfig.Builder().apply {
-            val analyzerThread = HandlerThread(
-                "RedColorAnalysis"
-            ).apply { start() }
-            setCallbackHandler(Handler(analyzerThread.looper))
             setImageReaderMode(ImageAnalysis.ImageReaderMode.ACQUIRE_LATEST_IMAGE)
         }.build()
 
         return ImageAnalysis(analyzerConfig).apply {
-            analyzer = RedColorAnalyzer()
+            setAnalyzer(executor, RedColorAnalyzer())
         }
     }
 
