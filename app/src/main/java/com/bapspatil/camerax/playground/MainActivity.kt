@@ -25,7 +25,6 @@ import android.os.Handler
 import android.os.HandlerThread
 import android.util.Log
 import android.util.Rational
-import android.util.Size
 import android.view.Surface
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
@@ -69,29 +68,6 @@ class MainActivity : AppCompatActivity(), LifecycleOwner {
     }
 
     private fun setupPreview(): Preview {
-        resizePreviewForDeviceScreen()
-
-        val previewConfig = PreviewConfig.Builder().apply {
-            setLensFacing(CameraX.LensFacing.BACK)
-            setTargetAspectRatio(Rational(1, 1))
-            setTargetResolution(Size(800, 800))
-        }.build()
-
-        val preview = Preview(previewConfig)
-
-        preview.setOnPreviewOutputUpdateListener {
-
-            val parent = texture_view.parent as ViewGroup
-            parent.removeView(texture_view)
-            parent.addView(texture_view, 0)
-
-            texture_view.surfaceTexture = it.surfaceTexture
-            updateTransform()
-        }
-        return preview
-    }
-
-    private fun resizePreviewForDeviceScreen() {
         val width = IntArray(1)
         val height = IntArray(1)
         val viewTreeObserver = texture_view?.viewTreeObserver
@@ -105,6 +81,23 @@ class MainActivity : AppCompatActivity(), LifecycleOwner {
                 }
             })
         }
+
+        val previewConfig = PreviewConfig.Builder().apply {
+            setLensFacing(CameraX.LensFacing.BACK)
+            setTargetAspectRatio(Rational(width[0], height[0]))
+        }.build()
+
+        val preview = Preview(previewConfig)
+
+        preview.setOnPreviewOutputUpdateListener {
+            val parent = texture_view.parent as ViewGroup
+            parent.removeView(texture_view)
+            parent.addView(texture_view, 0)
+
+            texture_view.surfaceTexture = it.surfaceTexture
+            updateTransform()
+        }
+        return preview
     }
 
     private fun setupImageCapture(): ImageCapture {
